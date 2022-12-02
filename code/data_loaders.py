@@ -1,4 +1,4 @@
-#from neuron import Neuron
+from neuron import Neuron
 
 import pandas as pd
 import os.path as op
