@@ -93,12 +93,14 @@ def get_neuron_matrix(dir_path):
     n_cells = len(path)
     n_features = len(features_names)
 
-    matrix = pd.DataFrame(np.zeros((n_cells, n_features)), columns = features_names)
+    neuron_df = pd.DataFrame(np.zeros((n_cells, n_features)), columns = features_names)
 
+    neuron_ids = []
     for i, neuron_path in enumerate(path):
         myneuron = excel_to_neuron(neuron_path)
+        neuron_ids.append(myneuron.id)
         features = myneuron.get_feature_dict()
-        #matrix[i] = 1 x n_features
-        matrix.loc[i]= features
-
-    return matrix
+        neuron_df.loc[i]= features
+    neuron_df['id'] = neuron_ids
+    neuron_df.set_index('id', inplace=True)
+    return neuron_df
