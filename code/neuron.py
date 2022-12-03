@@ -60,7 +60,7 @@ class Neuron:
             average_by_type = by_type.mean()
             dendrite_types = average_by_type.index.tolist()
 
-            dendrite_types_noaxons = [den_type for den_type in dendrite_types if 'Axon' not in dend_type]
+            dendrite_types_noaxons = [den_type for den_type in dendrite_types if 'Axon' not in den_type]
 
             stats_dict = {}
             for dend_type in dendrite_types:

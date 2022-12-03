@@ -16,6 +16,10 @@ def initialize_barplot(figsize = (35, 10)):
 
     return fig, ax
 
+def save_figure(path_to_save, fig = None, ax = None):
+    plt.tight_layout()
+    plt.savefig(path_to_save, dpi = 300)
+
 
 def plot_dendrogram(model, **kwargs):
     # Create linkage matrix and then plot the dendrogram
