@@ -1,6 +1,9 @@
 from neuron import Neuron
 
 import pandas as pd
+import numpy as np
+
+import os
 import os.path as op
 
 def genenerate_dendrite_df(path_to_xls):
@@ -75,3 +78,27 @@ def excel_to_neuron(path_to_xls):
     new_neuron.add_dendrites(dendrite_df)
 
     return new_neuron
+
+def get_neuron_files_in_dir(dir_path):
+    xls_path = op.join(dir_path,'brain hack xls')
+    files = os.listdir(xls_path)
+    return [op.join(xls_path,f) for f in files if f.endswith("xls")]
+
+def get_neuron_matrix(dir_path):
+    path = get_neuron_files_in_dir(dir_path)
+
+    first_neuron = excel_to_neuron(path[0])
+    features_names = first_neuron.get_feature_dict().keys()
+
+    n_cells = len(path)
+    n_features = len(features_names)
+
+    matrix = pd.DataFrame(np.zeros((n_cells, n_features)), columns = features_names)
+
+    for i, neuron_path in enumerate(path):
+        myneuron = excel_to_neuron(neuron_path)
+        features = myneuron.get_feature_dict()
+        #matrix[i] = 1 x n_features
+        matrix.loc[i]= features
+
+    return matrix
