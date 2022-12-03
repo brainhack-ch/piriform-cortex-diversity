@@ -14,7 +14,7 @@ class Neuron:
     def add_dendrites(self, dendrites_df):
         self.dendrites = dendrites_df
 
-    def get_feature_dict(self, feature_list = [], group_by_type = False):
+    def get_feature_dict(self, feature_list = [], group_by_type = True):
         # from a list of features, return a numpy array with all features
         if len(feature_list) == 0:
             feature_list = ['Depth', 'Level', 'Set 1', 'Dendrite Branching Angle', 'Dendrite Branching Angle B',
@@ -27,7 +27,7 @@ class Neuron:
 
         return tmp_to_merge
 
-    def get_dendrite_feature_statistics(self, feature_list, group_by_type = False):
+    def get_dendrite_feature_statistics(self, feature_list, group_by_type = True):
 
         # get selected features (except categorised data)
         #is_not_categorised = [feat for feat in feature_list if feat not in ['Set 1']]
@@ -59,6 +59,8 @@ class Neuron:
 
             average_by_type = by_type.mean()
             dendrite_types = average_by_type.index.tolist()
+
+            dendrite_types_noaxons = [den_type for den_type in dendrite_types if 'Axon' not in dend_type]
 
             stats_dict = {}
             for dend_type in dendrite_types:
