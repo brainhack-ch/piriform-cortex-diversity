@@ -2,6 +2,7 @@ from neuron import Neuron
 
 import pandas as pd
 import os.path as op
+import os
 
 def genenerate_dendrite_df(path_to_xls):
 
@@ -75,3 +76,8 @@ def excel_to_neuron(path_to_xls):
     new_neuron.add_dendrites(dendrite_df)
 
     return new_neuron
+
+def get_neuron_files_in_dir(dir_path):
+    xls_path = op.join(dir_path,'brain hack xls')
+    files = os.listdir(xls_path)
+    return [op.join(xls_path,f) for f in files if f.endswith("xls")]

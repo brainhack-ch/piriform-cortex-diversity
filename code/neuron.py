@@ -67,3 +67,6 @@ class Neuron:
         stats_dict.update({'level_1-count':self.dendrites.loc[self.dendrites.Level == 1].shape[0]})
 
         self.dendrites_features = stats_dict
+
+
+#def get_feature_matrix(neuron_list):
