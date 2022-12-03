@@ -18,7 +18,7 @@ class Neuron:
         # from a list of features, return a numpy array with all features
         if len(feature_list) == 0:
             feature_list = ['Depth', 'Level', 'Set 1', 'Dendrite Area', 'Dendrite Branching Angle', 'Dendrite Branching Angle B',
-                            'Dendrite Length', 'Dendrite Orientation Angle', 'Dendrite Position X_x', 'Collection_x',
+                            'Dendrite Length', 'Dendrite Orientation Angle', 'Dendrite Position X_x',
                             'Dendrite Position Y_x', 'Dendrite Position Z_x', 'Dendrite Straightness']
 
         self.get_dendrite_feature_statistics(feature_list)
