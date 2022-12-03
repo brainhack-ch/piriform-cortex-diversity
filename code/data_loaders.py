@@ -104,3 +104,11 @@ def get_neuron_matrix(dir_path):
     neuron_df['id'] = neuron_ids
     neuron_df.set_index('id', inplace=True)
     return neuron_df
+
+def fill_neuron_layers(file_path, neuron_df):
+    cell_info = pd.read_excel(file_path)
+    cell_info.set_index('cell_id',inplace=True)
+    updated_df = neuron_df.merge(cell_info, left_index=True, right_index=True, how='left')
+    updated_df['layer'].fillna(value='unknown', inplace=True)
+    
+    return updated_df
