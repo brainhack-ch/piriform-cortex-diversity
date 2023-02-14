@@ -1,0 +1,12 @@
+name: piriform-cortex
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - notebook
+  - pandas
+  - scikit-learn
+  - matplotlib
+  - xlrd
+prefix: /Users/hugofluhr/miniconda3/envs/piriform-cortex

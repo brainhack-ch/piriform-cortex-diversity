@@ -1,0 +1,23 @@
+[project]
+name = "piriform-cortex-diversity"
+version = "0.0.1"
+authors = [
+  { name="Hugo Fluhr", email="hugo.fluhr@gmail.com" },
+  { name="Alexandre Cionca", email="alexandre.cionca@gmail.com"}
+]
+description = "Code perform analysis of the diversity of neurons in the piriform cortex."
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/brainhack-ch/piriform-cortex-diversity"
+"Bug Tracker" = "https://github.com/brainhack-ch/piriform-cortex-diversity/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
