@@ -30,6 +30,10 @@ def genenerate_dendrite_df(path_to_xls):
         feat_df = pd.read_excel(path_to_xls, sheet_name = feat, skiprows = 1)\
                     .drop(columns = ['Unit', 'FilamentID', 'Time', 'Category', 'Depth', 'Level', 'Set 1'])\
                     .dropna(axis = 0, subset = ['ID'])
+        
+        # removing "collection" columns for multi-data features
+        if 'Collection' in feat_df.columns:
+            feat_df =  feat_df.drop(columns = ['Collection'])
 
         # Add new feature to existing dataframe
         dendrite_df = dendrite_df.merge(feat_df, on = 'ID', how = 'outer')
