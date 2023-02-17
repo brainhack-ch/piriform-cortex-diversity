@@ -19,11 +19,20 @@ def hierarchical_cstm(data, n_clusters = None, d_thresh = None, plot = True,
     labels = clustering.fit_predict(data)
     unique_labels = np.unique(labels)
 
+    n_labels = labels.max() + 1
+
+    cluster_distances = np.flip(clustering.distances_)[:n_labels+1]
+
+    print('- Clustering stability for k clusters\n  ', ' '.join([f'k={i+2}: {dist:2.3f}' for i, dist in enumerate(np.abs(np.diff(cluster_distances)))]))
+
     labels_df = pd.DataFrame(labels, index = np.arange(len(labels)), columns = ['label'])
 
-    print(f'Clustering yielded {labels.max()+1} clusters')
+    if n_clusters is None:
+        print(f'- Clustering yielded {n_labels} clusters')
 
-    print('Groups:', [np.sum(labels == i) for i in np.unique(labels)])
+    print('- Groups:', [np.sum(labels == i) for i in np.unique(labels)])
+
+    label_to_color = None
 
     if plot:
         fig, ax = plotting_tools.initialize_dedrogram(d_thresh = d_thresh, n_labels = len(labels),
