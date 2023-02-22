@@ -88,12 +88,12 @@ def excel_to_neuron(path_to_xls, **kwargs):
     return new_neuron
 
 def get_neuron_files_in_dir(dir_path):
-    xls_path = op.join(dir_path,'brain hack xls')
-    files = os.listdir(xls_path)
-    return [op.join(xls_path,f) for f in files if f.endswith("xls")]
+    #xls_path = op.join(dir_path,'brain hack xls')
+    files = os.listdir(dir_path)
+    return [op.join(dir_path,f) for f in files if f.endswith("xls")]
 
-def get_neuron_matrix(dir_path, **kwargs):
-    path = get_neuron_files_in_dir(dir_path)
+def get_neuron_matrix(path_to_data, **kwargs):
+    path = get_neuron_files_in_dir(path_to_data)
 
     first_neuron = excel_to_neuron(path[0], **kwargs)
     features_names = first_neuron.get_feature_dict().keys()
@@ -117,6 +117,8 @@ def get_neuron_matrix(dir_path, **kwargs):
         neuron_df.loc[i]= features
         
         progressbar.value += 1
+    
+    progressbar.style = {'bar_color': '#81FF6B'}
         
     neuron_df['id'] = neuron_ids
     neuron_df.set_index('id', inplace=True)
