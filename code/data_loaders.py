@@ -8,15 +8,28 @@ import os.path as op
 
 import ipywidgets
 
-def genenerate_dendrite_df(excel_file, verb = True):
+def genenerate_dendrite_df(excel_file, neuron_id, verb = True):
 
     # Keeps only features starting with "Dendrite"
     dendrite_features = [feat for feat in excel_file.sheet_names if 'Dendrite' in feat.split(' ')[0]]
 
+    if len(dendrite_features) < 1:
+        if verb:
+            print(f'Warning, no dendrite features in file {neuron_id} !')
+        return pd.DataFrame([])
+    
+    
     # Convert first feature sheet into a dendrite DataFrame
-    dendrite_df = excel_file.parse(dendrite_features[0], skiprows = 1)\
-                        .drop(columns = ['Unit', 'FilamentID', 'Time'])\
-                        .loc[:, ['ID', 'Category', 'Depth', 'Level', 'Set 1', 'Dendrite Area']]
+    dendrite_df = excel_file.parse(dendrite_features[0], skiprows = 1)#\
+                        #.drop(columns = ['Unit', 'FilamentID', 'Time'])\
+                        #.loc[:, ['ID', 'Category', 'Depth', 'Level', 'Set 1', 'Dendrite Area']]
+    
+    col_to_keep = [col for col in dendrite_df.columns if col in ['ID', 'Category', 'Depth', 'Level', 'Set 1', 'Dendrite Area']]
+    dendrite_df = dendrite_df.loc[:, col_to_keep]
+
+    if 'Set 1' not in col_to_keep:
+        print(f'Warning, no information about dendrite types (apical, etc) - setting "Set 1" column to "Unknown" !')
+        dendrite_df['Set 1'] = 'Unknown'
 
     # Drop last empty row
     dendrite_df = dendrite_df.dropna(axis = 0, subset = ['ID'])
@@ -27,9 +40,13 @@ def genenerate_dendrite_df(excel_file, verb = True):
 
     # Iterate over features
     for feat in dendrite_features[1:]:
-        feat_df = excel_file.parse(sheet_name = feat, skiprows = 1)\
-                    .drop(columns = ['Unit', 'FilamentID', 'Time', 'Category', 'Depth', 'Level', 'Set 1'])\
-                    .dropna(axis = 0, subset = ['ID'])
+        feat_df = excel_file.parse(sheet_name = feat, skiprows = 1)#\
+                    #.drop(columns = ['Unit', 'FilamentID', 'Time', 'Category', 'Depth', 'Level', 'Set 1'])\
+                    #.dropna(axis = 0, subset = ['ID'])
+
+        col_to_drop = [col for col in feat_df.columns if col in ['Unit', 'FilamentID', 'Time', 'Category', 'Depth', 'Level', 'Set 1']]
+        feat_df = feat_df.drop(columns = col_to_drop)\
+                        .dropna(axis = 0, subset = ['ID'])
         
         # removing "collection" columns for multi-data features
         if 'Collection' in feat_df.columns:
@@ -43,7 +60,7 @@ def genenerate_dendrite_df(excel_file, verb = True):
 
     return dendrite_df
 
-def get_neuron_specific_features(excel_file, features_list = ['Filament BoundingBoxAA Length',
+def get_neuron_specific_features(excel_file, neuron_id, features_list = ['Filament BoundingBoxAA Length',
                                                                 'Filament BoundingBoxOO Length',
                                                                 'Filament Dendrite Length (sum)',
                                                                 'Filament Distance from Origin']):
@@ -53,23 +70,31 @@ def get_neuron_specific_features(excel_file, features_list = ['Filament Bounding
 
     # Iterate over specified features
     for feat in features_list:
-        feat_df = excel_file.parse(sheet_name = feat, skiprows = 1)\
-                    .drop(columns = ['Category', 'Time', 'ID'])
+        try:
+            feat_df = excel_file.parse(sheet_name = feat, skiprows = 1)\
+                        .drop(columns = ['Category', 'Time', 'ID'])
+            
+        except ValueError:
+            print(f'Feature "{feat}" could not be found for file {neuron_id}')
+            feat_df = pd.DataFrame([])
 
         # Iterate over features to gather (if more than 1)
-        for col in feat_df.columns:
+        cols_to_keeps = [col for col in feat_df.columns if col not in ['Unit', 'Collection']]
+        for col in cols_to_keeps:
             neuron_spec_features.update({col:feat_df.loc[0, col]})
 
     # Manually removes columns that could not be dropped
-    del neuron_spec_features['Unit']
-    del neuron_spec_features['Collection']
+    #del neuron_spec_features['Unit']
+    #del neuron_spec_features['Collection']
 
     return neuron_spec_features
 
-def excel_to_neuron(path_to_xls, **kwargs):
+def excel_to_neuron(path_to_xls, verb = False, **kwargs):
 
     # Parse neuron id from path to excel file ('.' split removes file extension and ' ' removes potential ' - Copy')
     neuron_id = op.basename(path_to_xls).split('.')[0].split(' ')[0]
+    if verb:
+        print(f'Loading {neuron_id}')
 
     # Generate neuron
     new_neuron = Neuron(id = neuron_id, file_path = path_to_xls)
@@ -80,11 +105,15 @@ def excel_to_neuron(path_to_xls, **kwargs):
         print(f'Warning, neuron {neuron_id} Excel file has only {len(neuron_file.sheet_names)} sheets !')
 
     # Gather neuron specific data
-    neuron_features = get_neuron_specific_features(excel_file = neuron_file)
+    neuron_features = get_neuron_specific_features(excel_file = neuron_file, neuron_id = neuron_id)
+    if len(neuron_features) < 1:
+        print(f'Warning, no cell feature found in {neuron_id} file !')
     new_neuron.add_features(neuron_features)
  
     # Gather dendrite data in the form of a DataFrame
-    dendrite_df = genenerate_dendrite_df(excel_file = neuron_file, **kwargs)
+    dendrite_df = genenerate_dendrite_df(excel_file = neuron_file, neuron_id = neuron_id, verb = verb, **kwargs)
+    if dendrite_df.shape[1] < 1:
+        print(f'Warning, no dendrite feature found in {neuron_id} file !')
     new_neuron.add_dendrites(dendrite_df)
 
     return new_neuron
