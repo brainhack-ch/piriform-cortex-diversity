@@ -25,4 +25,7 @@ The environment should hopefully be set up and now anytime you want to work on t
 
 ## Install the code we have
 
-Work in Progress
+The easiest way to get the code from this repository is to click on "Code" (green button) and "download ZIP". Once the download is complete, unzip to the desired folder amd then open a terminal window and do the following :  
+`cd path/to/the/code` with the appropriate path to the folder that you just downloaded.
+`conda activate piriform-cortex` to activate the environment.  
+`jupyter notebook` to launch a jupyter notebook server on your web browser from which you can open the _clustering_ notebook at `notebooks/clustering.ipynb`. Finally, you may follow the instructions on the notebook to run the piriform cortex neurons clustering.
