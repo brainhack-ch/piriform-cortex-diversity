@@ -25,4 +25,7 @@ The environment should hopefully be set up and now anytime you want to work on t
 
 ## Install the code we have
 
-Work in Progress
+The easiest way to get the code from this repository is to click on "Code" (green button) and "download ZIP". Once the download is complete, open a terminal window and do the following :  
+` cd path/to/the/code` with the appropriate path to the folder that you just downloaded.
+`conda activate piriform-cortex` to activate the environment.  
+`jupyter notebook` to launch a jupyter notebook server from which you can open the `clustering.ipynb` notebook.
