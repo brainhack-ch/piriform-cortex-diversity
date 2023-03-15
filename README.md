@@ -21,7 +21,7 @@ If prompted, enter `y` and ENTER to accept the installation of packages. Now you
 
 The environment should hopefully be set up and now anytime you want to work on the project you need to :
 1) Open a Terminal window
-2) Type `conda activate piriform-cortex` to activate the virtual environment and gain access to all the packages we have installed in it.
+2) Type `conda activate piriform-cortex` to activate the virtual environment and gain access to all the packages we have installed in it.  
 
 ## Install the code we have
 
