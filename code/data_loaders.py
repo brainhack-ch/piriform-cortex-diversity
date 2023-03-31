@@ -131,7 +131,7 @@ def get_neuron_specific_features(
     return neuron_spec_features
 
 
-def compute_AB_ratio(neuron_df, exclude = ['Branching'], **kwargs):
+def compute_AB_ratio(neuron_df, exclude = [], **kwargs):
     # Search for columns with "Basal" keyword
     columns_with_basal = [
         col
