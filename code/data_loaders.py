@@ -131,6 +131,39 @@ def get_neuron_specific_features(
     return neuron_spec_features
 
 
+def compute_AB_ratio(neuron_df, exclude = [], **kwargs):
+    # Search for columns with "Basal" keyword
+    columns_with_basal = [
+        col
+        for col
+        in neuron_df.columns
+        if "Basal"
+        in col
+        ]
+    
+    # Remove columns to excludes (e.g., branching angles)
+    for excl in exclude:
+        columns_with_basal = [
+            col
+            for col
+            in columns_with_basal
+            if excl
+            not in col
+            ]
+
+    neuron_df_w_ratio = neuron_df.copy()
+
+    for column_basal in columns_with_basal:
+        column_apical = column_basal.replace("-Basal", "-Apical")
+        ratio_name = column_basal.replace("-Basal", "-AB_ratio")
+
+        # Compute the Apical/Basal ratio
+        ratio = neuron_df.loc[:, column_apical]/neuron_df.loc[:, column_basal]
+        neuron_df_w_ratio[ratio_name] = np.nan_to_num(ratio, posinf=0, neginf=0)
+
+    return neuron_df_w_ratio
+
+
 def excel_to_neuron(path_to_xls, verb=False, **kwargs):
     # Parse neuron id from path to excel file ('.' split removes file extension and ' ' removes potential ' - Copy')
     neuron_id = op.basename(path_to_xls).split(".")[0].split(" ")[0]
@@ -219,9 +252,14 @@ def get_neuron_matrix(path_to_data, **kwargs):
 
     progressbar.style = {"bar_color": "#81FF6B"}
 
-    neuron_df["id"] = neuron_ids
-    neuron_df.set_index("id", inplace=True)
-    return neuron_df.sort_index(axis=1)
+    # Compute Apical/Basal ratio for selected features
+    neuron_df_w_ratio = compute_AB_ratio(neuron_df)
+
+    # Reset ID to match neuron specific ID
+    neuron_df_w_ratio["id"] = neuron_ids
+    neuron_df_w_ratio.set_index("id", inplace=True)
+
+    return neuron_df_w_ratio.sort_index(axis=1)
 
 
 def fill_neuron_layers(file_path, neuron_df):
