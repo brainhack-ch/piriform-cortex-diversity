@@ -11,11 +11,13 @@ import ipywidgets
 
 
 def get_correct_sheet_names(path_to_xls):
-    wb = xlrd.open_workbook(path_to_xls)
-    nb_sheets = len(wb.sheet_names())
+    wb = pd.ExcelFile(path_to_xls)
     feat_names = []
-    for s in range(nb_sheets):
-        feat_names.append(wb.sheet_by_index(s).cell(0, 0).value)
+    for s_name in wb.sheet_names:
+        feat_name = pd.read_excel(wb, sheet_name=s_name, nrows=1, usecols="A").values[
+            0, 0
+        ]
+        feat_names.append(feat_name)
 
     return feat_names
 
@@ -26,10 +28,26 @@ def genenerate_dendrite_df(excel_file, neuron_id, correct_sheet_names, verb=True
         feat for feat in correct_sheet_names if "Dendrite" in feat.split(" ")[0]
     ]
 
+    # Latest version of Imaris changes form "Dendrite" to "Segment"
     if len(dendrite_features) < 1:
         if verb:
-            print(f"Warning, no dendrite features in file {neuron_id} !")
+            print("Warning, no `dendrite` features - trying `segment`.")
+
+        dendrite_features = [
+            feat for feat in correct_sheet_names if "Segment" in feat.split(" ")[0]
+        ]
+
+    if len(dendrite_features) < 1:
+        if verb:
+            print(f"Warning, no `segment` features in file {neuron_id} !")
         return pd.DataFrame([])
+
+    seen = set()
+    feature_duplicates = [x for x in dendrite_features if x in seen or seen.add(x)]
+
+    dendrite_features = [
+        feat for feat in dendrite_features if feat not in feature_duplicates
+    ]
 
     # Convert first feature sheet into a dendrite DataFrame
     dendrite_df = excel_file.parse(
@@ -47,7 +65,8 @@ def genenerate_dendrite_df(excel_file, neuron_id, correct_sheet_names, verb=True
 
     if "Set 1" not in col_to_keep:
         print(
-            f'Warning, no information about dendrite types (apical, etc) - setting "Set 1" column to "Unknown" !'
+            "Warning, no information about dendrite types (apical, etc) - "
+            "setting 'Set 1' column to 'Unknown' !"
         )
         dendrite_df["Set 1"] = "Unknown"
 
@@ -78,11 +97,18 @@ def genenerate_dendrite_df(excel_file, neuron_id, correct_sheet_names, verb=True
             feat_df = feat_df.drop(columns=["Collection"])
 
         # Add new feature to existing dataframe
+        # print(feat_df.columns)
+        # print(dendrite_df.columns)
         dendrite_df = dendrite_df.merge(feat_df, on="ID", how="outer")
+
+    # Renaming columns with "Segment" back to "Dendrite"
+    col_rename = [col.replace("Segment", "Dendrite") for col in dendrite_df.columns]
+    dendrite_df.columns = col_rename
 
     if verb:
         print(
-            f"Successfully converted data from {dendrite_df.shape[0]} dendrites ({dendrite_df.shape[1]} features found)."
+            f"Successfully converted data from {dendrite_df.shape[0]} dendrites "
+            f"({dendrite_df.shape[1]} features found)."
         )
 
     return dendrite_df
@@ -100,6 +126,7 @@ def get_neuron_specific_features(
         "Filament Full Branch Level",
         "Filament Length (sum)",
         "Filament No. Dendrite Branch Pts",
+        "Filament No. Segment Branch Pts",
     ],
 ):
     # Initialize neuron features dict
@@ -131,25 +158,13 @@ def get_neuron_specific_features(
     return neuron_spec_features
 
 
-def compute_AB_ratio(neuron_df, exclude = [], **kwargs):
+def compute_AB_ratio(neuron_df, exclude=[], **kwargs):
     # Search for columns with "Basal" keyword
-    columns_with_basal = [
-        col
-        for col
-        in neuron_df.columns
-        if "Basal"
-        in col
-        ]
-    
+    columns_with_basal = [col for col in neuron_df.columns if "Basal" in col]
+
     # Remove columns to excludes (e.g., branching angles)
     for excl in exclude:
-        columns_with_basal = [
-            col
-            for col
-            in columns_with_basal
-            if excl
-            not in col
-            ]
+        columns_with_basal = [col for col in columns_with_basal if excl not in col]
 
     neuron_df_w_ratio = neuron_df.copy()
 
@@ -158,7 +173,7 @@ def compute_AB_ratio(neuron_df, exclude = [], **kwargs):
         ratio_name = column_basal.replace("-Basal", "-AB_ratio")
 
         # Compute the Apical/Basal ratio
-        ratio = neuron_df.loc[:, column_apical]/neuron_df.loc[:, column_basal]
+        ratio = neuron_df.loc[:, column_apical] / neuron_df.loc[:, column_basal]
         neuron_df_w_ratio[ratio_name] = np.nan_to_num(ratio, posinf=0, neginf=0)
 
     return neuron_df_w_ratio
