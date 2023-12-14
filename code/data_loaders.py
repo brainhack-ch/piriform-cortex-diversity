@@ -28,10 +28,26 @@ def genenerate_dendrite_df(excel_file, neuron_id, correct_sheet_names, verb=True
         feat for feat in correct_sheet_names if "Dendrite" in feat.split(" ")[0]
     ]
 
+    # Latest version of Imaris changes form "Dendrite" to "Segment"
     if len(dendrite_features) < 1:
         if verb:
-            print(f"Warning, no dendrite features in file {neuron_id} !")
+            print("Warning, no `dendrite` features - trying `segment`.")
+
+        dendrite_features = [
+            feat for feat in correct_sheet_names if "Segment" in feat.split(" ")[0]
+        ]
+
+    if len(dendrite_features) < 1:
+        if verb:
+            print(f"Warning, no `segment` features in file {neuron_id} !")
         return pd.DataFrame([])
+
+    seen = set()
+    feature_duplicates = [x for x in dendrite_features if x in seen or seen.add(x)]
+
+    dendrite_features = [
+        feat for feat in dendrite_features if feat not in feature_duplicates
+    ]
 
     # Convert first feature sheet into a dendrite DataFrame
     dendrite_df = excel_file.parse(
@@ -49,7 +65,8 @@ def genenerate_dendrite_df(excel_file, neuron_id, correct_sheet_names, verb=True
 
     if "Set 1" not in col_to_keep:
         print(
-            f'Warning, no information about dendrite types (apical, etc) - setting "Set 1" column to "Unknown" !'
+            "Warning, no information about dendrite types (apical, etc) - "
+            "setting 'Set 1' column to 'Unknown' !"
         )
         dendrite_df["Set 1"] = "Unknown"
 
@@ -80,11 +97,18 @@ def genenerate_dendrite_df(excel_file, neuron_id, correct_sheet_names, verb=True
             feat_df = feat_df.drop(columns=["Collection"])
 
         # Add new feature to existing dataframe
+        # print(feat_df.columns)
+        # print(dendrite_df.columns)
         dendrite_df = dendrite_df.merge(feat_df, on="ID", how="outer")
+
+    # Renaming columns with "Segment" back to "Dendrite"
+    col_rename = [col.replace("Segment", "Dendrite") for col in dendrite_df.columns]
+    dendrite_df.columns = col_rename
 
     if verb:
         print(
-            f"Successfully converted data from {dendrite_df.shape[0]} dendrites ({dendrite_df.shape[1]} features found)."
+            f"Successfully converted data from {dendrite_df.shape[0]} dendrites "
+            f"({dendrite_df.shape[1]} features found)."
         )
 
     return dendrite_df
@@ -102,6 +126,7 @@ def get_neuron_specific_features(
         "Filament Full Branch Level",
         "Filament Length (sum)",
         "Filament No. Dendrite Branch Pts",
+        "Filament No. Segment Branch Pts",
     ],
 ):
     # Initialize neuron features dict
