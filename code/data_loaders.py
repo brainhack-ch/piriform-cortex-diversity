@@ -11,11 +11,13 @@ import ipywidgets
 
 
 def get_correct_sheet_names(path_to_xls):
-    wb = xlrd.open_workbook(path_to_xls)
-    nb_sheets = len(wb.sheet_names())
+    wb = pd.ExcelFile(path_to_xls)
     feat_names = []
-    for s in range(nb_sheets):
-        feat_names.append(wb.sheet_by_index(s).cell(0, 0).value)
+    for s_name in wb.sheet_names:
+        feat_name = pd.read_excel(wb, sheet_name=s_name, nrows=1, usecols="A").values[
+            0, 0
+        ]
+        feat_names.append(feat_name)
 
     return feat_names
 
@@ -131,25 +133,13 @@ def get_neuron_specific_features(
     return neuron_spec_features
 
 
-def compute_AB_ratio(neuron_df, exclude = [], **kwargs):
+def compute_AB_ratio(neuron_df, exclude=[], **kwargs):
     # Search for columns with "Basal" keyword
-    columns_with_basal = [
-        col
-        for col
-        in neuron_df.columns
-        if "Basal"
-        in col
-        ]
-    
+    columns_with_basal = [col for col in neuron_df.columns if "Basal" in col]
+
     # Remove columns to excludes (e.g., branching angles)
     for excl in exclude:
-        columns_with_basal = [
-            col
-            for col
-            in columns_with_basal
-            if excl
-            not in col
-            ]
+        columns_with_basal = [col for col in columns_with_basal if excl not in col]
 
     neuron_df_w_ratio = neuron_df.copy()
 
@@ -158,7 +148,7 @@ def compute_AB_ratio(neuron_df, exclude = [], **kwargs):
         ratio_name = column_basal.replace("-Basal", "-AB_ratio")
 
         # Compute the Apical/Basal ratio
-        ratio = neuron_df.loc[:, column_apical]/neuron_df.loc[:, column_basal]
+        ratio = neuron_df.loc[:, column_apical] / neuron_df.loc[:, column_basal]
         neuron_df_w_ratio[ratio_name] = np.nan_to_num(ratio, posinf=0, neginf=0)
 
     return neuron_df_w_ratio
